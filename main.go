@@ -4,8 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-//	"strconv"
-
 	"golang.org/x/net/webdav"
 )
 
@@ -16,10 +14,6 @@ func main() {
 
 	dir := os.Args[1]
 	portStr := os.Args[2]
-	//port, err := strconv.Atoi(portStr)
-	//if err != nil {
-	//	log.Fatal("Invalid port")
-	//}
 	user := os.Args[3]
 	pass := os.Args[4]
 
