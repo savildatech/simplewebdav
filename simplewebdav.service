@@ -1,0 +1,10 @@
+[Unit]
+Description=WebDAV Server
+
+[Service]
+ExecStart=/path/to/webdavserver /path/to/dir 8080 username password
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
