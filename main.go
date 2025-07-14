@@ -4,18 +4,23 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
+
 	"golang.org/x/net/webdav"
 )
 
 func main() {
-	if len(os.Args) != 5 {
-		log.Fatal("Usage: program dir port username password")
+	dir := os.Getenv("WEBDAV_DIR")
+	portStr := os.Getenv("WEBDAV_PORT")
+	user := os.Getenv("WEBDAV_USER")
+	pass := os.Getenv("WEBDAV_PASS")
+	readonlyStr := os.Getenv("WEBDAV_READONLY")
+
+	if dir == "" || portStr == "" || user == "" || pass == "" {
+		log.Fatal("Required env vars: WEBDAV_DIR, WEBDAV_PORT, WEBDAV_USER, WEBDAV_PASS")
 	}
 
-	dir := os.Args[1]
-	portStr := os.Args[2]
-	user := os.Args[3]
-	pass := os.Args[4]
+	readonly := strings.ToLower(readonlyStr) == "true"
 
 	handler := &webdav.Handler{
 		FileSystem: webdav.Dir(dir),
@@ -29,10 +34,21 @@ func main() {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
+
+		if readonly {
+			switch r.Method {
+			case "GET", "HEAD", "PROPFIND", "OPTIONS":
+				// allow
+			default:
+				http.Error(w, "Read-only mode", http.StatusForbidden)
+				return
+			}
+		}
+
 		handler.ServeHTTP(w, r)
 	})
 
 	addr := ":" + portStr
-	log.Printf("Serving %s on http://localhost%s", dir, addr)
+	log.Printf("Serving %s on http://localhost%s (readonly: %v)", dir, addr, readonly)
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
